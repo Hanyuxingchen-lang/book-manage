@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.book.mapper.BorrowMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO borrow_record(book_id,reader_name,borrow_time)
+        VALUES(#{bookId},#{readerName},NOW())
+    </insert>
+
+    <select id="selectUnReturnByBookId" resultType="BorrowRecord">
+        SELECT * FROM borrow_record
+        WHERE book_id = #{bookId} AND return_time IS NULL
+    </select>
+
+    <update id="updateReturnTime">
+        UPDATE borrow_record SET return_time = NOW() WHERE id = #{id}
+    </update>
+
+    <select id="selectAll" resultType="BorrowRecord">
+        SELECT * FROM borrow_record ORDER BY borrow_time DESC
+    </select>
+</mapper>

@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图书借阅管理系统 | 科技后台</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, "Microsoft YaHei", sans-serif;
+        }
+        body {
+            min-height: 100vh;
+            background: #070b14;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 120, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 180, 255, 0.06) 0%, transparent 40%);
+            color: #e6edf7;
+            padding: 32px;
+        }
+        /* 头部标题 */
+        .page-header {
+            margin-bottom: 30px;
+            border-left: 4px solid #0078ff;
+            padding-left: 16px;
+        }
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            background: linear-gradient(90deg, #00a8ff, #0066ff);
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 2px;
+        }
+        .page-header p {
+            margin-top: 6px;
+            color: #8992a3;
+            font-size: 14px;
+        }
+        /* 毛玻璃卡片容器 */
+        .glass-card {
+            background: rgba(16, 24, 40, 0.65);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 130, 255, 0.18);
+            border-radius: 14px;
+            box-shadow: 0 0 35px rgba(0, 100, 255, 0.08);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        /* 搜索栏区域 */
+        .search-bar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .search-input {
+            flex: 1;
+            max-width: 420px;
+            height: 42px;
+            background: rgba(0, 20, 45, 0.7);
+            border: 1px solid rgba(0, 140, 255, 0.25);
+            border-radius: 8px;
+            padding: 0 16px;
+            color: #fff;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #0088ff;
+            box-shadow: 0 0 12px rgba(0, 136, 255, 0.3);
+        }
+        .search-input::placeholder {
+            color: #64748b;
+        }
+        /* 科技按钮通用样式 */
+        .tech-btn {
+            height: 42px;
+            padding: 0 22px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            letter-spacing: 0.5px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #0070ff, #0048cc);
+            color: white;
+            box-shadow: 0 0 14px rgba(0, 110, 255, 0.35);
+        }
+        .btn-primary:hover {
+            box-shadow: 0 0 20px rgba(0, 110, 255, 0.55);
+            transform: translateY(-2px);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #00b894, #00896c);
+            color: white;
+            box-shadow: 0 0 14px rgba(0, 184, 148, 0.3);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4757, #c0392b);
+            color: white;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #0088ff;
+            color: #00a0ff;
+        }
+        /* 表格样式 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table thead tr {
+            background: rgba(0, 90, 200, 0.15);
+        }
+        .data-table th, .data-table td {
+            padding: 14px 12px;
+            text-align: center;
+            border-bottom: 1px solid rgba(0, 130, 255, 0.12);
+            font-size: 14px;
+        }
+        .data-table th {
+            color: #90c8ff;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+        .data-table tbody tr {
+            transition: background 0.25s;
+        }
+        .data-table tbody tr:hover {
+            background: rgba(0, 110, 255, 0.08);
+        }
+        /* 弹窗遮罩层 */
+        .modal-mask {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 5, 15, 0.75);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+        .modal-box {
+            width: 520px;
+            background: rgba(12, 20, 36, 0.9);
+            border: 1px solid rgba(0, 140, 255, 0.22);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 0 50px rgba(0, 100, 255, 0.18);
+        }
+        .modal-title {
+            font-size: 20px;
+            margin-bottom: 22px;
+            color: #00b0ff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-close {
+            cursor: pointer;
+            color: #8899b3;
+            font-size: 24px;
+        }
+        .form-item {
+            margin-bottom: 18px;
+        }
+        .form-item label {
+            display: block;
+            margin-bottom: 8px;
+            color: #b0c4de;
+            font-size: 14px;
+        }
+        .form-input {
+            width: 100%;
+            height: 40px;
+            background: rgba(0, 15, 35, 0.6);
+            border: 1px solid rgba(0, 130, 255, 0.2);
+            border-radius: 6px;
+            padding: 0 14px;
+            color: #fff;
+            font-size: 14px;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #0088ff;
+            box-shadow: 0 0 10px rgba(0,136,255,0.25);
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 26px;
+        }
+        /* 底部分页 */
+        .page-pagination {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+        /* 记录面板 */
+        .record-panel {
+            margin-top: 30px;
+        }
+        /* 加载动画 */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6688bb;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <!-- 页面标题 -->
+    <div class="page-header">
+        <h1>图书借阅智能管理系统</h1>
+        <p>SpringBoot后端接口可视化管理平台 | JDK17 + MyBatis + MySQL</p>
+    </div>
+
+    <!-- 图书管理卡片 -->
+    <div class="glass-card">
+        <div class="search-bar">
+            <input class="search-input" v-model="keyword" placeholder="输入图书名称模糊检索..." @keyup.enter="loadBookList"/>
+            <button class="tech-btn btn-primary" @click="loadBookList">🔍 检索图书</button>
+            <button class="tech-btn btn-success" @click="openAddModal">➕ 新增图书</button>
+            <button class="tech-btn btn-outline" @click="showRecord = !showRecord">📋 借阅记录</button>
+        </div>
+
+        <!-- 图书表格 -->
+        <div v-if="!loading">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>图书ID</th>
+                        <th>图书名称</th>
+                        <th>作者</th>
+                        <th>ISBN编号</th>
+                        <th>库存数量</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="book in bookList" :key="book.id">
+                        <td>{{ book.id }}</td>
+                        <td>{{ book.bookName }}</td>
+                        <td>{{ book.author }}</td>
+                        <td>{{ book.isbn }}</td>
+                        <td :style="{color: book.stock <= 2 ? '#ff5c5c' : '#42e0a0'}">{{ book.stock }}</td>
+                        <td style="display:flex;gap:8px;justify-content:center">
+                            <button class="tech-btn btn-primary" style="height:34px;padding:0 12px" @click="openBorrowModal(book.id)">借阅</button>
+                            <button class="tech-btn btn-outline" style="height:34px;padding:0 12px" @click="openEditModal(book)">编辑</button>
+                            <button class="tech-btn btn-danger" style="height:34px;padding:0 12px" @click="delBook(book.id)">删除</button>
+                        </td>
+                    </tr>
+                    <tr v-if="bookList.length === 0">
+                        <td colspan="6" style="color:#64748b;padding:30px">暂无匹配图书数据</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div v-else class="loading">数据加载中，请稍候...</div>
+    </div>
+
+    <!-- 借阅记录面板 -->
+    <div class="glass-card record-panel" v-if="showRecord">
+        <h3 style="color:#00b0ff;margin-bottom:18px">📜 全部借阅归还记录</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>记录ID</th>
+                    <th>图书ID</th>
+                    <th>借阅人</th>
+                    <th>借阅时间</th>
+                    <th>归还时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="item in borrowRecordList" :key="item.id">
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.bookId }}</td>
+                    <td>{{ item.readerName }}</td>
+                    <td>{{ formatTime(item.borrowTime) }}</td>
+                    <td>{{ item.returnTime ? formatTime(item.returnTime) : '<span style="color:#ff6b6b">未归还</span>' }}</td>
+                    <td>
+                        <button v-if="!item.returnTime" class="tech-btn btn-success" style="height:34px;padding:0 12px" @click="returnBook(item.bookId)">归还图书</button>
+                    </td>
+                </tr>
+                <tr v-if="borrowRecordList.length === 0">
+                    <td colspan="6" style="color:#64748b;padding:30px">暂无借阅记录</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 新增/编辑图书弹窗 -->
+    <div class="modal-mask" v-if="modalVisible">
+        <div class="modal-box">
+            <div class="modal-title">
+                <span>{{ editBook ? '编辑图书信息' : '新增图书' }}</span>
+                <span class="modal-close" @click="modalVisible = false">×</span>
+            </div>
+            <div class="form-item">
+                <label>图书名称</label>
+                <input class="form-input" v-model="form.bookName" placeholder="请输入书名"/>
+            </div>
+            <div class="form-item">
+                <label>作者名称</label>
+                <input class="form-input" v-model="form.author" placeholder="请输入作者"/>
+            </div>
+            <div class="form-item">
+                <label>ISBN编号</label>
+                <input class="form-input" v-model="form.isbn" placeholder="图书唯一ISBN"/>
+            </div>
+            <div class="form-item">
+                <label>库存数量</label>
+                <input class="form-input" v-model.number="form.stock" type="number" min="0"/>
+            </div>
+            <div class="modal-footer">
+                <button class="tech-btn btn-outline" @click="modalVisible = false">取消</button>
+                <button class="tech-btn btn-primary" @click="submitBook">确认提交</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 借阅弹窗 -->
+    <div class="modal-mask" v-if="borrowModalVisible">
+        <div class="modal-box">
+            <div class="modal-title">
+                <span>图书借阅登记</span>
+                <span class="modal-close" @click="borrowModalVisible = false">×</span>
+            </div>
+            <div class="form-item">
+                <label>借阅人姓名</label>
+                <input class="form-input" v-model="borrowName" placeholder="填写借阅人"/>
+            </div>
+            <div class="modal-footer">
+                <button class="tech-btn btn-outline" @click="borrowModalVisible = false">取消</button>
+                <button class="tech-btn btn-success" @click="submitBorrow">确认借阅</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const app = new Vue({
+    el: '#app',
+    data() {
+        return {
+            loading: false,
+            keyword: '',
+            bookList: [],
+            borrowRecordList: [],
+            showRecord: false,
+            // 图书弹窗
+            modalVisible: false,
+            editBook: null,
+            form: {
+                id: null,
+                bookName: '',
+                author: '',
+                isbn: '',
+                stock: 0
+            },
+            // 借阅弹窗
+            borrowModalVisible: false,
+            targetBookId: null,
+            borrowName: ''
+        }
+    },
+    mounted() {
+        this.loadBookList();
+    },
+    methods: {
+        // 加载图书列表
+        async loadBookList() {
+            this.loading = true;
+            try {
+                const res = await fetch(`/api/book/page?keyword=${this.keyword}`);
+                const json = await res.json();
+                this.bookList = json.data.records;
+            } catch (err) {
+                alert('接口请求失败，请检查后端服务是否启动');
+            } finally {
+                this.loading = false;
+            }
+        },
+        // 加载借阅记录
+        async loadBorrowRecord() {
+            const res = await fetch('/api/borrow/record');
+            const json = await res.json();
+            this.borrowRecordList = json.data;
+        },
+        // 打开新增弹窗
+        openAddModal() {
+            this.editBook = null;
+            this.form = {id:null, bookName:'', author:'', isbn:'', stock:0};
+            this.modalVisible = true;
+        },
+        // 打开编辑弹窗
+        openEditModal(book) {
+            this.editBook = book;
+            this.form = {...book};
+            this.modalVisible = true;
+        },
+        // 提交新增/编辑图书
+        async submitBook() {
+            if(!this.form.bookName || !this.form.author || !this.form.isbn) {
+                alert('书名、作者、ISBN不能为空！');
+                return;
+            }
+            let res;
+            if(this.editBook) {
+                // 修改 PUT
+                res = await fetch('/api/book/edit', {
+                    method: 'PUT',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify(this.form)
+                })
+            } else {
+                // 新增 POST
+                res = await fetch('/api/book/add', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify(this.form)
+                })
+            }
+            const data = await res.json();
+            alert(data.msg);
+            this.modalVisible = false;
+            this.loadBookList();
+        },
+        // 删除图书
+        async delBook(id) {
+            if(!confirm('确认删除该图书？')) return;
+            const res = await fetch(`/api/book/${id}`, {method: 'DELETE'});
+            const data = await res.json();
+            alert(data.msg);
+            this.loadBookList();
+        },
+        // 打开借阅弹窗
+        openBorrowModal(bookId) {
+            this.targetBookId = bookId;
+            this.borrowName = '';
+            this.borrowModalVisible = true;
+        },
+        // 提交借阅
+        async submitBorrow() {
+            if(!this.borrowName) {
+                alert('请输入借阅人姓名');
+                return;
+            }
+            const res = await fetch('/api/borrow/add', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({bookId: this.targetBookId, readerName: this.borrowName})
+            })
+            const data = await res.json();
+            alert(data.msg);
+            this.borrowModalVisible = false;
+            this.loadBookList();
+            this.loadBorrowRecord();
+        },
+        // 归还图书
+        async returnBook(bookId) {
+            const res = await fetch(`/api/borrow/return/${bookId}`, {method: 'PUT'});
+            const data = await res.json();
+            alert(data.msg);
+            this.loadBookList();
+            this.loadBorrowRecord();
+        },
+        // 时间格式化
+        formatTime(timeStr) {
+            if(!timeStr) return '';
+            return timeStr.replace('T',' ').substring(0,19);
+        },
+        // 切换借阅记录面板
+        showRecord() {
+            this.showRecord = !this.showRecord;
+            if(this.showRecord) this.loadBorrowRecord();
+        }
+    }
+})
+</script>
+</body>
+</html>

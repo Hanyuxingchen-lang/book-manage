@@ -1,0 +1,21 @@
+# 服务端口
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+# 数据库配置
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/book_db?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456 # 改成你自己mysql密码
+
+# MyBatis配置
+mybatis:
+  mapper-locations: classpath:mybatis/*.xml
+  type-aliases-package: com.book.entity
+  configuration:
+    map-underscore-to-camel-case: true # 下划线自动转驼峰
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印SQL日志
